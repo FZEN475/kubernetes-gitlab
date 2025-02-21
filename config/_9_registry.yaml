@@ -8,7 +8,7 @@ global:
       secret: "cm-gitlab-tls"
     httpSecret:
       secret: "registry-secrets"
-      key: "httpsecret"
+      key: "httpSecret"
     notificationSecret:
       secret: "registry-secrets"
       key: "notification"
