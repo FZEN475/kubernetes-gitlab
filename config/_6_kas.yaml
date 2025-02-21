@@ -1,0 +1,207 @@
+
+
+
+annotations: {}
+global:
+  ## https://docs.gitlab.com/charts/charts/gitlab/kas/
+  kas:
+    enabled: true
+    service:
+      apiExternalPort: 8153 # port for connections from the GitLab backend
+    tls:
+      enabled: false
+      verify: false
+      secretName: "cm-redis-gitlab-client-tls"
+      caSecretName: "cm-redis-gitlab-client-tls"
+  hosts:
+    kas:
+      name: "gitlab-kas.gitlab.svc"
+
+
+gitlab:
+  kas:
+    init:
+      image: {}
+        # repository:
+      # tag:
+      resources:
+        requests:
+          cpu: 50m
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop: [ "ALL" ]
+
+    hpa:
+      # targetAverageValue: 100m  # DEPRECATED: in favor of `hpa.cpu.targetAverageValue` below
+      cpu:
+        targetType: AverageValue  # Utilization or AverageValue
+        targetAverageValue: 100m
+        # targetAverageUtilization: 75
+      # memory:
+      #   targetType: Utilization  # Utilization or AverageValue
+      #   targetAverageValue: 1G
+      #   targetAverageUtilization: 75
+      # Note that the HPA is limited to autoscaling/v2beta1, autoscaling/v2beta2 and autoscaling/v2
+      customMetrics: []  # Overrides HPA metrics definition
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+      # When Cluster Autoscaler (CA) wants to shut down a node, it only waits for up to 10 minutes for Pods
+      # to shut down and then terminates them anyway.
+      # This might not be enough for kas to drain all proxied connections.
+      # Hence, you might want to configure CA to not evict kas.
+      safeToEvict: "true"
+
+    keda:
+      enabled: false
+      ## See https://keda.sh/docs/2.10/concepts/scaling-deployments/#scaledobject-spec
+      pollingInterval: 30
+      cooldownPeriod: 300
+      # minReplicaCount: 2
+      # maxReplicaCount: 10
+      # fallback:
+      #   failureThreshold: 3
+      #   replicas: 6
+      # hpaName: keda-hpa-{scaled-object-name}
+      # restoreToOriginalReplicaCount: false
+      # behavior: {}
+      # triggers: []
+
+    image:
+      repository: registry.gitlab.com/gitlab-org/build/cng/gitlab-kas
+      # tag: latest
+      # pullPolicy: IfNotPresent
+      # pullSecrets: []
+    ingress:
+      apiVersion:
+      annotations: {}
+      tls: {}
+      agentPath: /
+      k8sApiPath: /k8s-proxy
+    maxReplicas: 10
+    maxUnavailable: 1
+    minReplicas: 1
+    podLabels: {}
+    common:
+      labels: {}
+    serviceLabels: {}
+    ## Additional environment variables to set
+    extraEnv: {}
+    extraEnvFrom: {}
+#    resources:
+#      requests:
+#        cpu: 100m
+#        memory: 100M
+    service:
+      externalPort: 8150
+      internalPort: 8150
+      apiInternalPort: 8153
+      kubernetesApiPort: 8154
+      privateApiPort: 8155
+      type: ClusterIP
+      # loadBalancerIP:
+      # loadBalancerSourceRanges:
+    metrics:
+      enabled: true
+      path: /metrics
+      serviceMonitor:
+        enabled: false
+        additionalLabels: {}
+        endpointConfig: {}
+      podMonitor:
+        enabled: false
+        additionalLabels: {}
+        endpointConfig: {}
+    observability:
+      port: 8151
+      livenessProbe:
+        path: /liveness
+      readinessProbe:
+        path: /readiness
+    serviceAccount:
+      enabled: true
+      create: true
+      annotations: {}
+      ## Used for local override of global ServiceAccount token mounting
+      automountServiceAccountToken: true
+      ## Name to be used for serviceAccount, otherwise defaults to chart fullname
+      name: "gitlab-kas"
+    # Tolerations for pod scheduling
+    tolerations: []
+    workhorse: {}
+      # by default, Workhorse is a part of the Webservice Pods / Service
+      # scheme: 'http'
+      # host: '0.0.0.0'
+      # serviceName: 'webservice'
+    # port: 8181
+    # merged with the default kas config
+#    customConfig:
+#      redis:
+#        tls:
+#          certificate_file: "/tmp/redis-gitlab-client/tls.crt"
+#          key_file: "/tmp/redis-gitlab-client/tls.key"
+#          ca_certificate_file: "/tmp/redis-gitlab-client/ca.crt"
+
+    websocketToken:
+      secret: "kas-secrets"
+      key: "kas-private-api"
+
+    privateApi:
+      secret: "kas-secrets"
+      key: "kas-websocket-token"
+
+    deployment:
+      terminationGracePeriodSeconds: 300
+      strategy: {}
+      # minReadySeconds: 0
+
+    ## Allow to overwrite under which User and Group the Pod will be running.
+    securityContext:
+      runAsUser: 65532
+      runAsGroup: 65532
+      fsGroup: 65532
+      # fsGroupChangePolicy: OnRootMismatch
+      seccompProfile:
+        type: "RuntimeDefault"
+
+    ## Allow to overwrite the specific security context under which the container is running.
+    containerSecurityContext:
+      runAsUser: 65532
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop: [ "ALL" ]
+
+    redis:
+      enabled: true
+
+    networkpolicy:
+      enabled: false
+      egress:
+        enabled: false
+        rules: []
+      ingress:
+        enabled: false
+        rules: []
+      annotations: {}
+
+    affinity:
+      podAntiAffinity:
+        topologyKey:
+      nodeAffinity:
+        key:
+        values:
+
+    # Priority class assigned to pods
+    priorityClassName: ""
+
+    extraVolumes: |
+      - name: redis-gitlab-client
+        secret:
+          secretName: cm-redis-gitlab-client-tls
+
+    extraVolumeMounts: |
+      - name: redis-gitlab-client
+        mountPath: /tmp/redis-gitlab-client/

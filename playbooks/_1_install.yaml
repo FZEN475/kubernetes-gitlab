@@ -1,0 +1,68 @@
+- hosts: control_main
+  become: true
+  tasks:
+
+    - name: Install gitlab.
+      ansible.builtin.include_tasks: ./_1_gitlab/_1_install.yaml
+
+#    - name: Install dependency.
+#      ansible.builtin.include_tasks: ./_1_minio/_1_install.yaml
+
+#    - name: Install NFS provisioner.
+#      ansible.builtin.include_tasks: ./_2_pgsql/_1_install.yaml
+
+#    - name: Install cert-manager.
+#      ansible.builtin.include_tasks: ./_3_redis/_1_install.yaml
+
+
+
+
+#
+#- hosts: control_main
+#  name: Init cluster.
+#  become: true
+#  tasks:
+#    - name: Init cluster.
+#      ansible.builtin.include_tasks: ./_1_kubeadm/_1_init.yaml
+#      vars:
+#        clear_etcd: true
+#
+#- hosts: control
+#  name: Add master node.
+#  become: true
+#  tasks:
+#    - name: Add master node.
+#      ansible.builtin.include_tasks: ./_1_kubeadm/_2_join.yaml
+#      vars:
+#        master: true
+#
+#- hosts: workers
+#  name: Add worker node.
+#  become: true
+#  tasks:
+#    - name: Add worker node.
+#      ansible.builtin.include_tasks: ./_1_kubeadm/_2_join.yaml
+#      vars:
+#        master: false
+#
+#- hosts: control_main
+#  name: Init network
+#  become: true
+#  tasks:
+#    - name: Init network
+#      ansible.builtin.include_tasks: ./_1_kubeadm/_3_network.yaml
+#
+#- hosts: servers
+#  name: Restart containerd
+#  become: true
+#  tasks:
+#    - name: Wait for calico.conflist present
+#      ansible.builtin.wait_for:
+#        path: /etc/cni/net.d/10-calico.conflist
+#        state: present
+#        msg: Timeout to find file /etc/cni/net.d/10-calico.conflist
+#    - name: Restart containerd
+#      ansible.builtin.service:
+#        name: containerd
+#        state: restarted
+#        enabled: true

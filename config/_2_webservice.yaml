@@ -1,0 +1,264 @@
+
+global:
+  ## https://docs.gitlab.com/charts/charts/globals#configure-workhorse-settings
+  ## Global settings related to Workhorse
+  workhorse:
+    serviceName: webservice-default
+    # scheme:
+    # host:
+    # port:
+    ## https://docs.gitlab.com/charts/installation/secrets#gitlab-workhorse-secret
+    secret: "gitlab-workhorse-secrets"
+    key: "workhorse"
+    tls:
+      enabled: true
+
+
+  ## https://docs.gitlab.com/charts/charts/globals#configure-webservice
+  webservice:
+    workerTimeout: 60
+
+
+
+gitlab:
+  webservice:
+    enabled: true
+    minReplicas: 1
+    workhorse:
+      tls:
+        secretName: cm-gitlab-tls
+      resources:
+#        limits:
+#          cpu: 700m
+#          memory: 1.5G
+        requests:
+          cpu: 200m
+          memory: 200m
+    resources:
+#      limits:
+#        cpu: 700m
+#        memory: 1.5G
+      requests:
+        cpu: 800m
+        memory: 4G
+    ingress:
+      tls:
+        enabled: true
+        secretName: cm-gitlab-tls
+    registry:
+      enabled: false
+
+
+
+
+
+
+    # Default values for webservice.
+    # This is a YAML-formatted file.
+    # Declare variables to be passed into your templates.
+    image: {}
+      # pullPolicy: IfNotPresent
+      # pullSecrets: []
+      # repository: registry.gitlab.com/gitlab-org/build/cng/gitlab-webservice-ee
+    # tag: master
+
+    init:
+      image: {}
+        # repository:
+        # tag:
+      # pullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: 200m
+          memory: 100M
+      containerSecurityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop: [ "ALL" ]
+
+    # Tolerations for pod scheduling
+    tolerations: []
+
+    monitoring:
+      # Monitoring IP whitelist
+      ipWhitelist:
+        - 0.0.0.0/0
+      exporter:
+        enabled: false
+        port: 8083
+
+    # Shutdown settings
+    # Defines an interval to block healthcheck,
+    # but continue accepting application requests.
+    shutdown:
+      blackoutSeconds: 10
+
+    extraEnv:
+      GITLAB_LOG_LEVEL: "WARN"
+    extraEnvFrom: {}
+
+    annotations: {}
+
+    podLabels: {}
+    common:
+      labels: {}
+    serviceLabels: {}
+
+    sshHostKeys:
+      # backwards compatibility - do not automount by default as the default behavior
+      # assumes all four key types (specified below), provided by `shared-secrets`
+      mount: false
+      mountName: ssh-host-keys
+      # defines which types of public SSH host keys to mount so that their fingerprints
+      # are available under /help/instance_configuration
+      types:
+        - dsa
+        - rsa
+        - ecdsa
+        - ed25519
+
+    metrics:
+      enabled: true
+      port: 8083
+      path: /metrics
+      tls: {}
+        # enabled:
+      # secretName:
+      serviceMonitor:
+        enabled: false
+        additionalLabels: {}
+        endpointConfig: {}
+      # DEPRECATED
+      annotations: {}
+
+    networkpolicy:
+      enabled: false
+      egress:
+        enabled: false
+        rules: []
+      ingress:
+        enabled: false
+        rules: []
+      annotations: {}
+
+    http:
+      enabled: true
+
+    tls:
+      enabled: true
+      secretName: cm-gitlab-tls
+
+    service:
+      type: ClusterIP
+      externalPort: 8080
+      internalPort: 8080
+      workhorseExternalPort: 8181
+      workhorseInternalPort: 8181
+      tls:
+        externalPort: 8081
+        internalPort: 8081
+      # loadBalancerIP:
+      # loadBalancerSourceRanges:
+#    enabled: true
+#
+#    ingress:
+#      apiVersion:
+#      enabled: true
+#      proxyConnectTimeout: 15
+#      proxyReadTimeout: 600
+#      proxyBodySize: "512m"
+#      tls: {}
+#        # secretName:
+#        # smartcardSecretName:
+#      # enabled: true
+#      annotations:
+#        nginx.ingress.kubernetes.io/service-upstream: "true"
+#      configureCertmanager:
+#      # Use this in combination of .deployments below
+#      requireBasePath: true
+#      useGeoClass: false
+
+    extraIngress:
+      enabled: false
+      apiVersion:
+      proxyConnectTimeout: 15
+      proxyReadTimeout: 600
+      proxyBodySize: "512m"
+      # hostname:
+      tls: {}
+        # secretName:
+        # smartcardSecretName:
+      # enabled: true
+      annotations:
+        nginx.ingress.kubernetes.io/service-upstream: "true"
+      configureCertmanager:
+      # Use this in combination of .deployments below
+      requireBasePath: true
+      useGeoClass: false
+
+    workerProcesses: 1
+
+    puma:
+      threads:
+        min: 4
+        max: 4
+      disableWorkerKiller: true
+      # workerMaxMemory: 1024 # in MB units
+
+    hpa:
+      # targetAverageValue: 1  # DEPRECATED: in favor of `hpa.cpu.targetAverageValue` below
+      minReplicas: 1
+      maxReplicas: 1
+      cpu:
+        targetType: AverageValue  # Utilization or AverageValue
+        targetAverageValue: 1
+        # targetAverageUtilization: 75
+      # memory:
+      #   targetType: Utilization  # Utilization or AverageValue
+      #   targetAverageValue: 1G
+      #   targetAverageUtilization: 75
+      # Note that the HPA is limited to autoscaling/v2beta1, autoscaling/v2beta2 and autoscaling/v2
+      customMetrics: []  # Overrides HPA metrics definition
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+
+    keda:
+      enabled: false
+      ## See https://keda.sh/docs/2.10/concepts/scaling-deployments/#scaledobject-spec
+      pollingInterval: 30
+      cooldownPeriod: 300
+      # minReplicaCount: 2
+      # maxReplicaCount: 10
+      # fallback:
+      #   failureThreshold: 3
+      #   replicas: 6
+      # hpaName: keda-hpa-{scaled-object-name}
+      # restoreToOriginalReplicaCount: false
+      # behavior: {}
+      # triggers: []
+
+
+    deployment:
+      # terminationGracePeriodSeconds: 30
+      startupProbe: {}
+      livenessProbe:
+        initialDelaySeconds: 200
+        periodSeconds: 60
+        timeoutSeconds: 30
+        successThreshold: 1
+        failureThreshold: 10
+      readinessProbe:
+        initialDelaySeconds: 200
+        periodSeconds: 5
+        timeoutSeconds: 2
+        successThreshold: 1
+        failureThreshold: 10
+
+      # strategy is used to configure the desired upgrade approach and
+      # configuration for the deployment. See the Kubernetes documentation
+      # related to this subject.
+      # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+      strategy: {}

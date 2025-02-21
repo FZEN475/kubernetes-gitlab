@@ -1,0 +1,55 @@
+---
+- name: Add stable chart repo gitlab
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    repo_state: "present"
+    force_update: true
+  with_items:
+    - {name: "gitlab", url: "https://charts.gitlab.io/"}
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_7_dashboard/{{ item.src }}'
+    dest: '/tmp/{{ item.dst }}'
+    mode: "0640"
+  with_items:
+    - { src: "_1_global.yaml", dst: "_1_values_global.yaml" }
+    - { src: "_2_webservice.yaml", dst: "_2_values_webservice.yaml" }
+    - { src: "_3_shell.yaml", dst: "_3_values_shell.yaml" }
+    - { src: "_4_migration.yaml", dst: "_4_values_migration.yaml" }
+    - { src: "_5_exporter.yaml", dst: "_5_values_exporter.yaml" }
+    - { src: "_6_kas.yaml", dst: "_6_values_kas.yaml" }
+    - { src: "_7_gitaly.yaml", dst: "_7_values_gitaly.yaml" }
+    - { src: "_8_sidekiq.yaml", dst: "_8_values_sidekiq.yaml" }
+    - { src: "_9_registry.yaml", dst: "_9_values_registry.yaml" }
+    - { src: "_10_pages.yaml", dst: "_10_values_pages.yaml" }
+
+- name: Remove gitlab
+  kubernetes.core.helm:
+    name: gitlab
+    chart_ref: gitlab/gitlab
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: true
+
+- name: Install gitlab
+  kubernetes.core.helm:
+    name: gitlab
+    chart_ref: gitlab/gitlab
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: false
+    values_files:
+      - /tmp/_1_values_global.yaml
+      - /tmp/_2_values_webservice.yaml
+      - /tmp/_3_values_shell.yaml
+      - /tmp/_4_values_migration.yaml
+      - /tmp/_5_values_exporter.yaml
+      - /tmp/_6_values_kas.yaml
+      - /tmp/_7_values_gitaly.yaml
+      - /tmp/_8_values_sidekiq.yaml
+      - /tmp/_9_values_registry.yaml
+      - /tmp/_10_values_pages.yaml

@@ -1,0 +1,18 @@
+services:
+  ansible:
+    image: ghcr.io/fzen475/ansible-image:latest
+    container_name: ansible-kubernetes-storages
+    env_file: ./.env
+    environment:
+      ANSIBLE_REPO: ${ANSIBLE_REPO}
+      SECURE_SERVER: ${SECURE_SERVER}
+      SECURE_PATH: ${SECURE_PATH}
+      LIBRARY: ${LIBRARY}
+      GIT_EXTRA_PARAM: ${GIT_EXTRA_PARAM}
+    secrets:
+      - id_ed25519
+    restart: no
+
+secrets:
+  id_ed25519:
+    file: /root/.ssh/id_ed25519
