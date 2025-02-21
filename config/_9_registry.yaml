@@ -107,7 +107,10 @@ registry:
     loadBalancerIP:
 
   ## Support for tolerations for pod scheduling
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
 
   # Priority class assigned to pods
   priorityClassName: ""
