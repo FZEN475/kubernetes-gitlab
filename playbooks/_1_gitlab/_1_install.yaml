@@ -10,7 +10,7 @@
 
 - name: Copy values
   ansible.builtin.copy:
-    src: '/source/config/_7_dashboard/{{ item.src }}'
+    src: '/source/config/{{ item.src }}'
     dest: '/tmp/{{ item.dst }}'
     mode: "0640"
   with_items:
