@@ -1,4 +1,16 @@
 ---
+
+- name: Create ServiceAccount gitlab-sa
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "gitlab-sa"
+        namespace: "gitlab"
+
 - name: Add stable chart repo gitlab
   kubernetes.core.helm_repository:
     name: "{{ item.name }}"
