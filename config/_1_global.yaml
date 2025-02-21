@@ -145,7 +145,7 @@ global:
     tcpUserTimeout:
     password:
       useSecret: true
-      secret: pgsql-gitlab-secrets
+      secret: gitlab-pgsql-secrets
       key: password
       file:
 #    ssl:
@@ -193,8 +193,8 @@ global:
         port: 26379
     sentinelAuth:
       enabled: true
-      secret: "redis-gitlab-credentials"
-      key: "redis-gitlab-password"
+      secret: "gitlab-redis-secrets"
+      key: "gitlab-redis-password"
 
 
   praefect:
@@ -227,7 +227,7 @@ global:
   minio:
     enabled: false
     credentials:
-      secret: "minio-gitlab-credentials"
+      secret: "gitlab-minio-secrets"
 
   ## https://docs.gitlab.com/charts/charts/globals#configure-appconfig-settings
   ## Rails based portions of this chart share many settings
@@ -349,35 +349,35 @@ global:
         # server_side_encryption:
       # server_side_encryption_kms_key_id
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     lfs:
       enabled: true
       proxy_download: true
       bucket: git-lfs
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     artifacts:
       enabled: true
       proxy_download: true
       bucket: gitlab-artifacts
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     uploads:
       enabled: true
       proxy_download: true
       bucket: gitlab-uploads
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     packages:
       enabled: true
       proxy_download: true
       bucket: gitlab-packages
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     externalDiffs:
       enabled: false
@@ -385,26 +385,26 @@ global:
       proxy_download: true
       bucket: gitlab-mr-diffs
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     terraformState:
       enabled: false
       bucket: gitlab-terraform-state
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     ciSecureFiles:
       enabled: false
       bucket: gitlab-ci-secure-files
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     dependencyProxy:
       enabled: false
       proxy_download: true
       bucket: gitlab-dependency-proxy
       connection:
-        secret: minio-gitlab-credentials
+        secret: gitlab-minio-secrets
         key: connection
     backups:
       bucket: gitlab-backups
@@ -496,7 +496,7 @@ global:
     ## https://docs.gitlab.com/charts/charts/globals#kas-settings
     gitlab_kas:
       secret: "kas-secrets"
-      key: "kas_shared_secret"
+      key: "kas-shared-secret"
       # enabled:
       # externalUrl:
       # internalUrl:
