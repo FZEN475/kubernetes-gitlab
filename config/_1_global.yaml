@@ -742,7 +742,7 @@ global:
     annotations: {}
     automountServiceAccountToken: false
     ## Name to be used for serviceAccount, otherwise defaults to chart fullname
-    name: gitlab-sa
+    #name: gitlab-sa
 
   ## https://docs.gitlab.com/charts/charts/globals/#tracing
   tracing:
