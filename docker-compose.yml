@@ -1,7 +1,7 @@
 services:
   ansible:
     image: ghcr.io/fzen475/ansible-image:latest
-    container_name: ansible-kubernetes-storages
+    container_name: ansible-kubernetes-gitlab
     env_file: ./.env
     environment:
       ANSIBLE_REPO: ${ANSIBLE_REPO}
