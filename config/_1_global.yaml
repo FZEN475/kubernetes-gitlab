@@ -87,8 +87,11 @@ global:
     configureCertmanager: false
     useNewIngressForCerts: false
     provider: nginx
-    class: nginx
-    annotations: {}
+    class: internal-nginx
+    annotations:
+      kubernetes.io/ingress.class: internal-nginx
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
     enabled: true
     tls:
       enabled: true
@@ -666,21 +669,9 @@ global:
   nodeAffinity:
 
   antiAffinity: soft
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: kubernetes.io/os
-                operator: In
-                values:
-                  - linux
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 1
-          preference:
-            matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
+
+  nodeSelector:
+    kubernetes.io/hostname: "control03"
 
   # Priority class assigned to pods, may be overridden for individual components
   # https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/

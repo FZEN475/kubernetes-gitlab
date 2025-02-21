@@ -8,7 +8,7 @@ global:
     # host:
     # port:
     ## https://docs.gitlab.com/charts/installation/secrets#gitlab-workhorse-secret
-    secret: "gitlab-workhorse-secrets"
+    secret: "gitlab-secrets"
     key: "workhorse"
     tls:
       enabled: true
@@ -28,19 +28,19 @@ gitlab:
       tls:
         secretName: cm-gitlab-tls
       resources:
-#        limits:
+        limits: {}
 #          cpu: 700m
 #          memory: 1.5G
         requests:
-          cpu: 200m
-          memory: 200m
+          cpu: 500m
+          memory: 512Mi
     resources:
-#      limits:
+      limits: {}
 #        cpu: 700m
 #        memory: 1.5G
       requests:
-        cpu: 800m
-        memory: 4G
+        cpu: 1
+        memory: 1Gi
     ingress:
       tls:
         enabled: true
@@ -68,9 +68,7 @@ gitlab:
         # tag:
       # pullPolicy: IfNotPresent
       resources:
-        requests:
-          cpu: 200m
-          memory: 100M
+        requests: {}
       containerSecurityContext:
         runAsUser: 1000
         allowPrivilegeEscalation: false
@@ -79,8 +77,10 @@ gitlab:
           drop: [ "ALL" ]
 
     # Tolerations for pod scheduling
-    tolerations: []
-
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
     monitoring:
       # Monitoring IP whitelist
       ipWhitelist:
