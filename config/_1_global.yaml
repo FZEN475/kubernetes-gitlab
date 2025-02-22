@@ -185,7 +185,7 @@ global:
     user: gitlab # использую пользователя по умолчанию. sidekiq не подтягивает пользователя в конфиг rails
     redisClusterConfig:
       user: gitlab
-    scheme: rediss
+    scheme: redis
     auth:
       enabled: true
       secret: "gitlab-redis-secrets"
