@@ -46,111 +46,111 @@
     state: absent
     wait: true
 
-#- name: Install gitlab
-#  kubernetes.core.helm:
-#    name: gitlab
-#    chart_ref: gitlab/gitlab
-#    release_namespace: gitlab
-#    create_namespace: true
-#    state: present
-#    wait: false
-#    values_files:
-#      - /tmp/_1_values_global.yaml
-#      - /tmp/_2_values_webservice.yaml
-#      - /tmp/_3_values_shell.yaml
-#      - /tmp/_4_values_migration.yaml
-#      - /tmp/_5_values_exporter.yaml
-#      - /tmp/_6_values_kas.yaml
-#      - /tmp/_7_values_gitaly.yaml
-#      - /tmp/_8_values_sidekiq.yaml
-#      - /tmp/_9_values_registry.yaml
-#      - /tmp/_10_values_pages.yaml
-#
-#
-#- name: Замена registry-auth.crt на tls.crt
-#  kubernetes.core.k8s_info:
-#    kind: Deployment
-#    name: gitlab-registry
-#    namespace: gitlab
-#  register: gitlab_registry
-#
-#- name: Патч gitlab-registry
-#  kubernetes.core.k8s:
-#    state: patched
-#    kind: Deployment
-#    name: gitlab-registry
-#    namespace: gitlab
-#    definition:
-#      spec:
-#        template:
-#          spec:
-#            volumes:
-#              - name: registry-secrets
-#                projected:
-#                  "{{ gitlab_registry.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='registry-secrets'].projected\") | replace('registry-auth.crt','tls.crt') | from_yaml | first }}"
-#
-#- name: Замена registry-auth.key на tls.key
-#  kubernetes.core.k8s_info:
-#    kind: Deployment
-#    name: gitlab-sidekiq-all-in-1-v2
-#    namespace: gitlab
-#  register: gitlab_sidekiq
-#
-#- name: Тест патч деплоя
-#  kubernetes.core.k8s:
-#    state: patched
-#    kind: Deployment
-#    name: gitlab-sidekiq-all-in-1-v2
-#    namespace: gitlab
-#    definition:
-#      spec:
-#        template:
-#          spec:
-#            volumes:
-#              - name: init-sidekiq-secrets
-#                projected:
-#                  "{{ gitlab_sidekiq.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-sidekiq-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
-#
-#- name: Замена registry-auth.key на tls.key
-#  kubernetes.core.k8s_info:
-#    kind: Deployment
-#    name: gitlab-toolbox
-#    namespace: gitlab
-#  register: gitlab_toolbox
-#
-#- name: Тест патч деплоя
-#  kubernetes.core.k8s:
-#    state: patched
-#    kind: Deployment
-#    name: gitlab-toolbox
-#    namespace: gitlab
-#    definition:
-#      spec:
-#        template:
-#          spec:
-#            volumes:
-#              - name: init-toolbox-secrets
-#                projected:
-#                  "{{ gitlab_toolbox.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-toolbox-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
-#
-#- name: Замена registry-auth.key на tls.key
-#  kubernetes.core.k8s_info:
-#    kind: Deployment
-#    name: gitlab-webservice-default
-#    namespace: gitlab
-#  register: gitlab_webservice_default
-#
-#- name: Тест патч деплоя
-#  kubernetes.core.k8s:
-#    state: patched
-#    kind: Deployment
-#    name: gitlab-webservice-default
-#    namespace: gitlab
-#    definition:
-#      spec:
-#        template:
-#          spec:
-#            volumes:
-#              - name: init-webservice-secrets
-#                projected:
-#                  "{{ gitlab_webservice_default.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-webservice-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
+- name: Install gitlab
+  kubernetes.core.helm:
+    name: gitlab
+    chart_ref: gitlab/gitlab
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: false
+    values_files:
+      - /tmp/_1_values_global.yaml
+      - /tmp/_2_values_webservice.yaml
+      - /tmp/_3_values_shell.yaml
+      - /tmp/_4_values_migration.yaml
+      - /tmp/_5_values_exporter.yaml
+      - /tmp/_6_values_kas.yaml
+      - /tmp/_7_values_gitaly.yaml
+      - /tmp/_8_values_sidekiq.yaml
+      - /tmp/_9_values_registry.yaml
+      - /tmp/_10_values_pages.yaml
+
+
+- name: Замена registry-auth.crt на tls.crt
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-registry
+    namespace: gitlab
+  register: gitlab_registry
+
+- name: Патч gitlab-registry
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-registry
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: registry-secrets
+                projected:
+                  "{{ gitlab_registry.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='registry-secrets'].projected\") | replace('registry-auth.crt','tls.crt') | from_yaml | first }}"
+
+- name: Замена registry-auth.key на tls.key
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-sidekiq-all-in-1-v2
+    namespace: gitlab
+  register: gitlab_sidekiq
+
+- name: Тест патч деплоя
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-sidekiq-all-in-1-v2
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-sidekiq-secrets
+                projected:
+                  "{{ gitlab_sidekiq.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-sidekiq-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
+
+- name: Замена registry-auth.key на tls.key
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-toolbox
+    namespace: gitlab
+  register: gitlab_toolbox
+
+- name: Тест патч деплоя
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-toolbox
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-toolbox-secrets
+                projected:
+                  "{{ gitlab_toolbox.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-toolbox-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
+
+- name: Замена registry-auth.key на tls.key
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-webservice-default
+    namespace: gitlab
+  register: gitlab_webservice_default
+
+- name: Тест патч деплоя
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-webservice-default
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-webservice-secrets
+                projected:
+                  "{{ gitlab_webservice_default.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-webservice-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
