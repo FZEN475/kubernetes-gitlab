@@ -182,8 +182,8 @@ global:
     host: redis.storage.svc
     serviceName: redis
     port: 6379
-#    user: gitlab # использую пользователя по умолчанию. sidekiq не подтягивает пользователя в конфиг rails
-    scheme: redis
+    user: gitlab # использую пользователя по умолчанию. sidekiq не подтягивает пользователя в конфиг rails
+    scheme: rediss
     auth:
       enabled: true
       secret: "gitlab-redis-secrets"
