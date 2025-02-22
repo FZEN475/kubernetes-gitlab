@@ -182,7 +182,7 @@ global:
     host: master
     serviceName: redis
     port: 6379
-#    user: gitlab
+    user: gitlab
 #    redisClusterConfig:
 #      user: gitlab
     scheme: redis
