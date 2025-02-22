@@ -179,7 +179,7 @@ global:
 
   ## https://docs.gitlab.com/charts/charts/globals#configure-redis-settings
   redis:
-    host: redis.storage.svc
+    host: master
     serviceName: redis
     port: 6379
 #    user: gitlab
