@@ -1,0 +1,49 @@
+---
+
+- name: pvc gitaly-backup-pvc
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: gitaly-backup-pvc
+        namespace: gitlab
+        annotations:
+          nfs.io/storage-path: gitaly-backup
+      spec:
+        storageClassName: nfs-client
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10G
+
+- name: configmap gitaly-backup-scripts
+  kubernetes.core.k8s:
+    state: present
+    namespace: gitlab
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: gitaly-backup-scripts
+      data:
+        init.sh: |
+          #!/bin/ash
+          if [ -z "$( ls -A '/repo-data/' )" ] && [ ! -z "$( ls -A '/backup/' )" ]
+          then
+            # shellcheck disable=SC2046
+            # shellcheck disable=SC2012
+            tar -zxf $(ls -t /backup/* | head -1) -C /repo-data/ || true;
+          fi
+        backup.sh: |
+          #!/bin/ash
+          if [ ! -z "$( ls -A '/repo-data/' )" ]
+          then 
+            name=$(date '+%Y-%m-%d_%H-%M')
+            tar -zcf "/backup/gitaly-$name.tar" -C /repo-data/ .
+            # shellcheck disable=SC2038
+            (find /backup/ -mindepth 1 -mmin +1440 | xargs rm) &>/dev/null || true;
+          fi

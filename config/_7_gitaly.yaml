@@ -15,14 +15,6 @@ global:
     tls:
       enabled: true
       secretName: "cm-gitlab-tls"
-    service:
-      externalPort: 8075
-      internalPort: 8075
-      tls:
-        externalPort: 8076
-        internalPort: 8076
-      type: ClusterIP
-      clusterIP: None
 
 
 gitlab:
@@ -32,8 +24,16 @@ gitlab:
         # pullPolicy: IfNotPresent
 
         # tag: master
+#    service:
+#      externalPort: 8075
+#      internalPort: 8075
+#      tls:
+#        externalPort: 8076
+#        internalPort: 8076
+#      type: ClusterIP
+#      clusterIP: None
+
     annotations:
-      fzen: "gitlab.gitaly"
       reloader.stakater.com/auto: "true"
 
     extraInitContainers: |
@@ -41,12 +41,13 @@ gitlab:
         image: alpine:latest
         command: ["/bin/ash", "-c", "/tmp/init.sh"]
         volumeMounts:
-          - mountPath: /source
-            name: repo-data
-          - mountPath: /dest
-            name: repo-data-backup
-          - mountPath: /tmp/
-            name: gitaly-data-init
+          - name: repo-data
+            mountPath: /repo-data
+          - name: backup
+            mountPath: /backup
+          - name: gitaly-backup-scripts
+            mountPath: /tmp/backup.sh
+            subPath: backup.sh
 
     extraContainers: |
       - name: cron-job
@@ -55,51 +56,47 @@ gitlab:
         securityContext:
           runAsUser: 0
         volumeMounts:
-          - mountPath: /source
-            name: repo-data
-          - mountPath: /etc/periodic/hourly/
-            name: gitaly-cron-backup
-          - mountPath: /backup/
-            name: repo-data-backup
+          - name: repo-data
+            mountPath: /repo-data
+          - name: backup
+            mountPath: /backup/
+          - name: gitaly-cron-backup
+            mountPath: /etc/periodic/hourly/backup
+            subPath: backup.sh      
 
     extraVolumes: |
-      - name: repo-data-backup
+      - name: backup
         persistentVolumeClaim:
-          claimName: repo-data-backup-gitaly-0
-      - name: gitaly-data-init
+          claimName: gitaly-backup-pvc
+      - name: gitaly-backup-scripts
         configMap:
-          name: gitaly-data-init
+          defaultMode: 720
+          name: gitaly-backup-scripts
           items:
           - key: init.sh
             path: init.sh
-            mode: 0755
-      - name: gitaly-cron-backup
-        configMap:
-          name: gitaly-cron-backup
-          items:
-          - key: backup
-            path: backup
-            mode: 0755
+          - key: backup.sh
+            path: backup.sh
 
-    metrics:
-      enabled: true
-      port: 9237
-      path: /metrics
-      serviceMonitor:
-        enabled: false
-        additionalLabels: { }
-        endpointConfig: { }
-    persistence:
-      enabled: false
-      storageClass: "nfs-client"
-      accessMode: ReadWriteOnce
-      size: 10Gi
-      subPath: ""
-      matchLabels: {}
-      matchExpressions: []
-      annotations:
-        nfs.io/storage-path: "gitaly_data"
+    common:
       labels: {}
+    podLabels: {}
+    serviceLabels: {}
+
+    shareProcessNamespace: false
+
+    init:
+      image: {}
+      # repository:
+      # tag:
+      resources: {}
+      #        requests:
+      #          cpu: 250m
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop: [ "ALL" ]
 
     # Gitaly built-in cgroups, spawns Git processes into a cgroup per repository, protecting the service/pod from OOM events
     # ref: https://docs.gitlab.com/ee/administration/gitaly/configure_gitaly.html#control-groups
@@ -121,25 +118,27 @@ gitlab:
         # memoryBytes:
         # cpuShares:
         # cpuQuotaUs:
-        # maxCgroupsPerRepo:
+      # maxCgroupsPerRepo:
+
+    ## Support for tolerations for pod scheduling
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+    ## The Gitaly StatefulSet's priorityClassName
+    # priorityClassName:
+
     # Gitaly shutdown grace period, how long to wait for in-flight requests to complete (seconds)
     # Pod `terminationGracePeriodSeconds` is set to this value + 5 seconds
     gracefulRestartTimeout: 25
-    # default enable gomemlimit to avoid gc related OOM errors
-    gomemlimit:
-      enabled: true
+
     logging:
       format: "json"
       level: "warn"
-        # sentryDsn:
-        # sentryEnvironment:
-    resources:
-#      limits:
-#        cpu: 500m
-#        memory: 512Mi
-      requests:
-        cpu: 500m
-        memory: 512Mi
+      # level:
+      # sentryDsn:
+      # sentryEnvironment:
 
     git: {}
       # catFileCacheSize:
@@ -148,9 +147,54 @@ gitlab:
       # config:
       #   - {key: "pack.threads", value: 4}
 
-    # Allows process namespace sharing within the pod
-    # This makes processes in a container visible to all other containers in the same pod.
-    shareProcessNamespace: false
+    prometheus: {}
+    # grpcLatencyBuckets: "[1.0, 1.5, 2.0, 2.5]"
+
+    workhorse: {}
+      # by default, Workhorse is a part of the Webservice Pods / Service
+      # scheme: 'http'
+      # host: '0.0.0.0'
+      # serviceName: 'webservice'
+    # port: 8181
+    shell:
+      authToken: {}
+      concurrency: []
+        # - rpc: "/gitaly.SmartHTTPService/PostUploadPack"
+        #   maxPerRepo: 20
+        # - rpc: "/gitaly.SSHService/SSHUploadPack"
+        #   maxPerRepo: 20
+
+    metrics:
+      enabled: true
+      port: 9236
+      path: /metrics
+      serviceMonitor:
+        enabled: false
+        additionalLabels: { }
+        endpointConfig: { }
+
+
+
+
+    persistence:
+      enabled: false
+      storageClass: "nfs-client"
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      subPath: ""
+      matchLabels: {}
+      matchExpressions: []
+      annotations:
+        nfs.io/storage-path: "gitaly_data"
+      labels: {}
+
+    resources:
+      #      limits:
+      #        cpu: 500m
+      #        memory: 512Mi
+      requests:
+        cpu: 500m
+        memory: 512Mi
 
     ## For PodDisruptionBudget, how many pods can be unavailable at one time
     maxUnavailable: 1
@@ -224,19 +268,10 @@ gitlab:
 
     backup: {}
       # goCloudUrl:
+    # default enable gomemlimit to avoid gc related OOM errors
+    gomemlimit:
+      enabled: true
 
-    init:
-      image: {}
-        # repository:
-      # tag:
-      resources:
-        requests:
-          cpu: 250m
-      containerSecurityContext:
-        allowPrivilegeEscalation: false
-        runAsNonRoot: true
-        capabilities:
-          drop: [ "ALL" ]
 
 
 

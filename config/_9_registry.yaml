@@ -244,13 +244,13 @@ registry:
       echo "......................................."
 
   # define some sane resource requests and limitations
-  resources:
+  resources: {}
 #    limits:
 #      cpu: 200m
 #      memory: 1024Mi
-    requests:
-      cpu: 500m
-      memory: 1G
+#    requests:
+#      cpu: 500m
+#      memory: 1G
 
   ## Node labels for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
