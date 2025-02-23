@@ -13,9 +13,9 @@ gitlab:
       image: { }
       # repository:
       # tag:
-      resources:
-        requests:
-          cpu: 500m
+      resources: {}
+#        requests:
+#          cpu: 500m
       containerSecurityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
@@ -80,13 +80,13 @@ gitlab:
           names: [ "default" ]
         external: [ ]
         authToken: { }
-    resources:
+    resources: {}
 #      limits:
 #        cpu: 700m
 #        memory: 1.5G
-      requests:
-        cpu: 500m
-        memory: 1Gi
+#      requests: {}
+#        cpu: 500m
+#        memory: 1Gi
     activeDeadlineSeconds: 3600
     backoffLimit: 6
 
