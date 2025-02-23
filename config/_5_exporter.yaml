@@ -34,7 +34,10 @@ tls:
   secretName: "cm-gitaly-tls"
 
 # Tolerations for pod scheduling
-tolerations: []
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 annotations: {}
 
