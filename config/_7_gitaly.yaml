@@ -39,7 +39,7 @@ gitlab:
     extraInitContainers: |
       - name: init
         image: alpine:latest
-        command: ["/bin/ash", "-c", "/tmp/init.sh"]
+        command: ["/bin/ash", "-c", "ls -all /tmp/init.sh; /tmp/init.sh;"]
         volumeMounts:
           - name: repo-data
             mountPath: /repo-data

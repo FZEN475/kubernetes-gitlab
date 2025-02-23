@@ -16,9 +16,9 @@ gitlab:
         # repository:
         # tag:
       # pullPolicy: IfNotPresent
-      resources:
-        requests:
-          cpu: 50m
+      resources: {}
+#        requests:
+#          cpu: 50m
       containerSecurityContext:
         runAsUser: 1000
         allowPrivilegeEscalation: false
@@ -30,7 +30,10 @@ gitlab:
     # nodeSelector: {}
 
     # Tolerations for pod scheduling
-    tolerations: []
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
 
     enabled: true
 
@@ -149,8 +152,6 @@ gitlab:
 
     hpa:
       # targetAverageValue: 350m  # DEPRECATED: in favor of `hpa.cpu.targetAverageValue` below
-      minReplicas: 1
-      maxReplicas: 1
       cpu:
         targetType: AverageValue  # Utilization or AverageValue
         targetAverageValue: 350m
@@ -187,7 +188,7 @@ gitlab:
 #        memory: 4G
       requests:
         cpu: 1
-        memory: 4G
+        memory: 1Gi
     maxUnavailable: 1
 
     # Define queue groups into Pods
