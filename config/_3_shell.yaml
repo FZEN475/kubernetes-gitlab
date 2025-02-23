@@ -53,14 +53,16 @@ gitlab:
           drop: [ "ALL" ]
 
     # Tolerations for pod scheduling
-    tolerations: []
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
 
     # Priority class assigned to pods
     priorityClassName: ""
 
     enabled: true
     annotations:
-      fzen: "gitlab.gitlab-shell"
       reloader.stakater.com/auto: "true"
     podLabels: {}
     common:

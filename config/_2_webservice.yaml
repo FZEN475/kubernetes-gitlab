@@ -99,7 +99,8 @@ gitlab:
       GITLAB_LOG_LEVEL: "WARN"
     extraEnvFrom: {}
 
-    annotations: {}
+    annotations:
+      reloader.stakater.com/auto: "true"
 
     podLabels: {}
     common:
