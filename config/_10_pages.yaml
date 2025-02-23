@@ -162,10 +162,10 @@ gitlab:
 
     maxUnavailable: 1
 
-#    resources:
-#      requests:
-#        cpu: 900m
-#        memory: 2G
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
 
     ## Allow to overwrite under which User and Group the Pod will be running.
     securityContext:
