@@ -27,9 +27,9 @@
     mode: "0640"
   with_items:
     - { src: "_1_global.yaml", dst: "_1_values_global.yaml" }
+    - { src: "_2_migration.yaml", dst: "_2_values_migration.yaml" }
     - { src: "_2_webservice.yaml", dst: "_2_values_webservice.yaml" }
     - { src: "_3_shell.yaml", dst: "_3_values_shell.yaml" }
-    - { src: "_4_migration.yaml", dst: "_4_values_migration.yaml" }
     - { src: "_5_exporter.yaml", dst: "_5_values_exporter.yaml" }
     - { src: "_6_kas.yaml", dst: "_6_values_kas.yaml" }
     - { src: "_7_gitaly.yaml", dst: "_7_values_gitaly.yaml" }
@@ -56,9 +56,10 @@
     wait: false
     values_files:
       - /tmp/_1_values_global.yaml
+      - /tmp/_2_values_migration.yaml
       - /tmp/_2_values_webservice.yaml
       - /tmp/_3_values_shell.yaml
-      - /tmp/_4_values_migration.yaml
+
       - /tmp/_5_values_exporter.yaml
       - /tmp/_6_values_kas.yaml
       - /tmp/_7_values_gitaly.yaml

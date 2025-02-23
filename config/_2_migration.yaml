@@ -23,7 +23,10 @@ gitlab:
           drop: [ "ALL" ]
 
     # Tolerations for pod scheduling
-    tolerations: [ ]
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
 
     # Annotations for the job
     annotations: { }
@@ -83,7 +86,7 @@ gitlab:
 #        memory: 1.5G
       requests:
         cpu: 500m
-        memory: 900M
+        memory: 1Gi
     activeDeadlineSeconds: 3600
     backoffLimit: 6
 
