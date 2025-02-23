@@ -183,7 +183,7 @@ global:
     serviceName: redis
     port: 6379
 #    user: gitlab
-    scheme: redis
+    scheme: rediss
     auth:
       enabled: true
       secret: "gitlab-redis-secrets"
