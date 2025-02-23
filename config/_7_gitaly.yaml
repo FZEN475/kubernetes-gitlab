@@ -37,7 +37,7 @@ gitlab:
       reloader.stakater.com/auto: "true"
 
     extraInitContainers: |
-      - name: test-init-cron
+      - name: init
         image: alpine:latest
         command: ["/bin/ash", "-c", "/tmp/init.sh"]
         volumeMounts:
@@ -46,8 +46,8 @@ gitlab:
           - name: backup
             mountPath: /backup
           - name: gitaly-backup-scripts
-            mountPath: /tmp/backup.sh
-            subPath: backup.sh
+            mountPath: /tmp/init.sh
+            subPath: init.sh
 
     extraContainers: |
       - name: cron-job
