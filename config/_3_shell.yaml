@@ -8,7 +8,7 @@ global:
       secret: "gitaly-secrets"
       key: "token-shell"
     hostKeys:
-      secret: "ssh-hosts-secrets"
+      secret: "shell-secrets"
     concurrency: [ ]
     # - rpc: "/gitaly.SmartHTTPService/PostUploadPack"
     #   maxPerRepo: 20
