@@ -43,9 +43,9 @@ gitlab:
       image: {}
         # repository:
       # tag:
-      resources:
-        requests:
-          cpu: 100m
+      resources: {}
+#        requests:
+#          cpu: 100m
       containerSecurityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
@@ -78,7 +78,7 @@ gitlab:
 #        memory: 200Mi
       requests:
         cpu: 100m
-        memory: 100M
+        memory: 100Mi
     maxUnavailable: 1
     minReplicas: 1
     maxReplicas: 10
