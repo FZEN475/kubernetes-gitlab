@@ -52,9 +52,9 @@ gitlab:
       image: {}
         # repository:
       # tag:
-      resources:
-        requests:
-          cpu: 50m
+#      resources:
+#        requests:
+#          cpu: 50m
       containerSecurityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
