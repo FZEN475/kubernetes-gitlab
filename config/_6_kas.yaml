@@ -10,8 +10,8 @@ global:
 #      apiExternalPort: 8153 # port for connections from the GitLab backend
     tls:
       enabled: true
-      secretName: "cm-redis-gitlab-client-tls"
-      caSecretName: "cm-redis-gitlab-client-tls"
+      secretName: "cm-gitlab-tls"
+      caSecretName: "cm-gitlab-tls"
   hosts:
     kas:
       name: "gitlab-kas.fzen.pro"
