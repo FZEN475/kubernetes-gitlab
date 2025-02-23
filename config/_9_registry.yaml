@@ -163,9 +163,9 @@ registry:
       # repository:
       # tag:
     # pullPolicy: IfNotPresent
-    resources:
-      requests:
-        cpu: 50m
+    resources: {}
+#      requests:
+#        cpu: 50m
     containerSecurityContext:
       runAsUser: 1000
       allowPrivilegeEscalation: false
@@ -244,13 +244,13 @@ registry:
       echo "......................................."
 
   # define some sane resource requests and limitations
-  resources: {}
+  resources:
 #    limits:
 #      cpu: 200m
 #      memory: 1024Mi
-#    requests:
-#      cpu: 500m
-#      memory: 1G
+    requests:
+      cpu: 500m
+      memory: 256Mi
 
   ## Node labels for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
@@ -279,7 +279,7 @@ registry:
   # if minReplicas is >1, shared storage MUST be used.
   hpa:
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 1
     cpu:
       targetType: Utilization  # Utilization or AverageValue
       # targetAverageValue: 1
@@ -310,7 +310,7 @@ registry:
     # triggers: []
 
   storage:
-    secret: minio-gitlab-credentials
+    secret: gitlab-minio-secrets
     key: registry-config
   # redirect:
   #   disable:

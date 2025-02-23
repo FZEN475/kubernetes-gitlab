@@ -70,7 +70,7 @@ gitlab:
           claimName: gitaly-backup-pvc
       - name: gitaly-backup-scripts
         configMap:
-          defaultMode: 0744
+          defaultMode: 0770
           name: gitaly-backup-scripts
           items:
           - key: init.sh
