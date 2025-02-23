@@ -60,7 +60,7 @@ gitlab:
             mountPath: /repo-data
           - name: backup
             mountPath: /backup/
-          - name: gitaly-cron-backup
+          - name: gitaly-backup-scripts
             mountPath: /etc/periodic/hourly/backup
             subPath: backup.sh      
 
