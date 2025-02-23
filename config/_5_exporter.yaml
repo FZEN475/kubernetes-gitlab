@@ -34,10 +34,7 @@ tls:
   secretName: "cm-gitaly-tls"
 
 # Tolerations for pod scheduling
-tolerations:
-  - key: "node-role.kubernetes.io/control-plane"
-    operator: "Exists"
-    effect: "NoSchedule"
+
 
 annotations: {}
 
@@ -113,3 +110,14 @@ gitlab-exporter:
     type: ClusterIP
     externalPort: 9169
     internalPort: 9169
+  resources:
+    # limits:
+    #  cpu: 1
+    #  memory: 2G
+    requests:
+      cpu: 150m
+      memory: 256M
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
