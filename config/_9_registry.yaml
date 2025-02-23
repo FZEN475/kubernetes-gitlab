@@ -130,7 +130,8 @@ registry:
       interval: 24h
       dryrun: false
 
-  annotations: {}
+  annotations:
+    reloader.stakater.com/auto: "true"
 
   networkpolicy:
     enabled: false

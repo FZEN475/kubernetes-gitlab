@@ -112,9 +112,9 @@ gitlab:
       image: { }
       # repository:
       # tag:
-      resources:
-        requests:
-          cpu: 50m
+      resources: {}
+#        requests:
+#          cpu: 50m
       containerSecurityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
@@ -138,10 +138,13 @@ gitlab:
       tls:
         enabled: true
         secretName: cm-gitlab-tls
-      path: # /
+      path:  /
 
     # Tolerations for pod scheduling
-    tolerations: [ ]
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
 
     cluster: true
 
