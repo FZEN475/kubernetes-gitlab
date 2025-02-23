@@ -200,16 +200,14 @@ gitlab:
         #   graceTime: 900
         #   shutdownWait: 30
         #   checkInterval: 3
-#        minReplicas: 1
-#        maxReplicas: 1
-#        # strategy: {}
-#        # queues: ''
-#        # extraVolumes
-#        # extraVolumeMounts
-#        # priorityClassName: ""
-#        hpa:
-#          minReplicas: 1
-#          maxReplicas: 1
+        # minReplicas: 1
+        # maxReplicas: 10
+        # strategy: {}
+        # queues: ''
+        # extraVolumes
+        # extraVolumeMounts
+        # priorityClassName: ""
+        # hpa:
         #   cpu:
         #     targetType: AverageValue
         #     targetAverageValue:
@@ -277,6 +275,3 @@ gitlab:
     affinity:
       podAntiAffinity:
         topologyKey:
-
-minReplicas: 1
-maxReplicas: 1
