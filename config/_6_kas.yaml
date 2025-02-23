@@ -1,32 +1,32 @@
 
 
 
-annotations: {}
+
 global:
   ## https://docs.gitlab.com/charts/charts/gitlab/kas/
   kas:
     enabled: true
-    service:
-      apiExternalPort: 8153 # port for connections from the GitLab backend
+#    service:
+#      apiExternalPort: 8153 # port for connections from the GitLab backend
     tls:
-      enabled: false
-      verify: false
+      enabled: true
       secretName: "cm-redis-gitlab-client-tls"
       caSecretName: "cm-redis-gitlab-client-tls"
   hosts:
     kas:
-      name: "gitlab-kas.gitlab.svc"
+      name: "gitlab-kas.fzen.pro"
 
 
 gitlab:
   kas:
+    annotations: {}
     init:
       image: {}
         # repository:
       # tag:
-      resources:
-        requests:
-          cpu: 50m
+      resources: {}
+#        requests:
+#          cpu: 50m
       containerSecurityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
@@ -90,10 +90,10 @@ gitlab:
     ## Additional environment variables to set
     extraEnv: {}
     extraEnvFrom: {}
-#    resources:
-#      requests:
-#        cpu: 100m
-#        memory: 100M
+    resources:
+      requests:
+        cpu: 200m
+        memory: 250M
     service:
       externalPort: 8150
       internalPort: 8150
@@ -129,7 +129,10 @@ gitlab:
       ## Name to be used for serviceAccount, otherwise defaults to chart fullname
       name: "gitlab-kas"
     # Tolerations for pod scheduling
-    tolerations: []
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
     workhorse: {}
       # by default, Workhorse is a part of the Webservice Pods / Service
       # scheme: 'http'
@@ -197,11 +200,11 @@ gitlab:
     # Priority class assigned to pods
     priorityClassName: ""
 
-    extraVolumes: |
-      - name: redis-gitlab-client
-        secret:
-          secretName: cm-redis-gitlab-client-tls
+    extraVolumes: ""
+#      - name: redis-gitlab-client
+#        secret:
+#          secretName: cm-redis-gitlab-client-tls
 
-    extraVolumeMounts: |
-      - name: redis-gitlab-client
-        mountPath: /tmp/redis-gitlab-client/
+    extraVolumeMounts: ""
+#      - name: redis-gitlab-client
+#        mountPath: /tmp/redis-gitlab-client/
