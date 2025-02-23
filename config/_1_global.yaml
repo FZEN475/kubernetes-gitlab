@@ -196,6 +196,9 @@ global:
       secret: "gitlab-redis-secrets"
       key: "gitlab-redis-password"
 
+  runner:
+    registrationToken:
+      secret: "runner-secrets"
 
   praefect:
     enabled: false
