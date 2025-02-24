@@ -27,7 +27,8 @@ gitlab:
           drop: [ "ALL" ]
 
     # Node labels for pod assignment
-    # nodeSelector: {}
+    nodeSelector:
+      kubernetes.io/hostname: "dev01"
 
     # Tolerations for pod scheduling
     tolerations:

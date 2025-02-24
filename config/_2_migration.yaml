@@ -27,7 +27,8 @@ gitlab:
       - key: "node-role.kubernetes.io/control-plane"
         operator: "Exists"
         effect: "NoSchedule"
-
+    nodeSelector:
+      kubernetes.io/hostname: "dev01"
     # Annotations for the job
     annotations: { }
     # Annotations for the pod
