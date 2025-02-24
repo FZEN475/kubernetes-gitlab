@@ -1,0 +1,127 @@
+---
+
+- name: Create ServiceAccount runner-kubernetes-sa
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "runner-kubernetes-sa"
+        namespace: "gitlab"
+
+- name: Create Role ingress-tcp-port-redact
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: ingress-tcp-port-redact
+        namespace: provisioners
+      rules:
+      - apiGroups: [""]
+        resources: ["configmaps"]
+        resourceNames: ["ingress-nginx-tcp"]
+        verbs: ["update", "get"]
+
+- name: Create RoleBinding ingress-tcp-port-redact-rb
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: ingress-tcp-port-redact-rb
+        namespace: provisioners
+      subjects:
+      - kind: ServiceAccount
+        name: runner-kubernetes-sa
+        namespace: dev
+        apiGroup: ""
+      roleRef:
+        kind: Role
+        name: ingress-tcp-port-redact
+        apiGroup: rbac.authorization.k8s.io
+
+- name: Add stable chart repo gitlab
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    repo_state: "present"
+    force_update: true
+  with_items:
+    - {name: "gitlab", url: "https://charts.gitlab.io/"}
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_1_gitlab/{{ item.src }}'
+    dest: '/tmp/{{ item.dst }}'
+    mode: "0640"
+  with_items:
+    - { src: "_1_no_tag.yaml", dst: "_1_values_runner_no_tags.yaml" }
+    - { src: "_2_docker_builder.yaml", dst: "_2_runner_docker_builder.yaml" }
+    - { src: "_3_helm.yaml", dst: "_3_runner_helm.yaml" }
+
+- name: Remove gitlab-runner
+  kubernetes.core.helm:
+    name: runner-no-tag
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: yes
+
+- name: Remove gitlab-runner
+  kubernetes.core.helm:
+    name: runner-docker-builder
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: yes
+
+- name: Remove gitlab-runner
+  kubernetes.core.helm:
+    name: runner-helm
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: yes
+
+- name: Установка gitlab-runner
+  kubernetes.core.helm:
+    name: runner-no-tag
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - /tmp/_1_values_runner_no_tags.yaml
+
+- name: Установка gitlab-runner
+  kubernetes.core.helm:
+    name: runner-docker-builder
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - /tmp/_2_runner_docker_builder.yaml
+
+- name: Установка gitlab-runner
+  kubernetes.core.helm:
+    name: runner-helm
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - /tmp/_3_runner_helm.yaml

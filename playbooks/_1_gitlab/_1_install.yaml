@@ -22,7 +22,7 @@
 
 - name: Copy values
   ansible.builtin.copy:
-    src: '/source/config/{{ item.src }}'
+    src: '/source/config/_1_gitlab/{{ item.src }}'
     dest: '/tmp/{{ item.dst }}'
     mode: "0640"
   with_items:
