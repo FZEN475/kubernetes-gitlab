@@ -92,14 +92,14 @@ gitlab:
       #hardLimitRss: 3000000
 
     livenessProbe:
-      initialDelaySeconds: 500
+      initialDelaySeconds: 600
       periodSeconds: 60
       timeoutSeconds: 30
       successThreshold: 1
       failureThreshold: 10
     readinessProbe:
-      initialDelaySeconds: 500
-      periodSeconds: 10
+      initialDelaySeconds: 600
+      periodSeconds: 60
       timeoutSeconds: 2
       successThreshold: 1
       failureThreshold: 10
