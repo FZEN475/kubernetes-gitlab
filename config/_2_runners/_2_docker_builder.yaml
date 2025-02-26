@@ -443,6 +443,7 @@ runners:
       [runners.kubernetes]
         namespace = "{{.Release.Namespace}}"
         image = "gcr.io/kaniko-project/executor:debug"
+        allowed_pull_policies = ["if-not-present", "always"]
         [[runners.kubernetes.volumes.empty_dir]]
           name = "docker-certs"
           mount_path = "/empty_dir"
