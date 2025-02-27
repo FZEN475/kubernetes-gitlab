@@ -75,7 +75,8 @@ gitlab:
         runAsNonRoot: true
         capabilities:
           drop: [ "ALL" ]
-
+    nodeSelector:
+      kubernetes.io/hostname: "prod01"
     # Tolerations for pod scheduling
     tolerations:
       - key: "node-role.kubernetes.io/control-plane"
