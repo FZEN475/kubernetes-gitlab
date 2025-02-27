@@ -5,11 +5,11 @@
 #    - name: Install backup.
 #      ansible.builtin.include_tasks: ./_0_backup/_1_install.yaml
 
-#    - name: Install gitlab.
-#      ansible.builtin.include_tasks: ./_1_gitlab/_1_install.yaml
+    - name: Install gitlab.
+      ansible.builtin.include_tasks: ./_1_gitlab/_1_install.yaml
 
-    - name: Install runners.
-      ansible.builtin.include_tasks: ./_2_runners/_1_install.yaml
+#    - name: Install runners.
+#      ansible.builtin.include_tasks: ./_2_runners/_1_install.yaml
 
 
 
