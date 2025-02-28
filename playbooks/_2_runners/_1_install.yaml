@@ -90,8 +90,8 @@
 - name: Runners list
   ansible.builtin.set_fact:
     runners:
-      - { name: "runner-no-tag", value: "/tmp/_1_values_runner_no_tags.yaml" }
-      - { name: "runner-docker-builder", value: "/tmp/_2_runner_docker_builder.yaml" }
+#      - { name: "runner-no-tag", value: "/tmp/_1_values_runner_no_tags.yaml" }
+#      - { name: "runner-docker-builder", value: "/tmp/_2_runner_docker_builder.yaml" }
       - { name: "runner-git", value: "/tmp/_3_runner_git.yaml" }
 #      - { name: "runner-github" }
 #      - { name: "runner-helm" }
