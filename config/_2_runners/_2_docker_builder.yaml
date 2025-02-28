@@ -449,7 +449,7 @@ runners:
           mount_path = "/empty_dir"
           medium = "Memory"
         [[runners.kubernetes.volumes.pvc]]
-          name = "docker-builder-cache-pvc"
+          name = "runner-cache-pvc"
           mount_path = "/pvc"
       [runners.cache]
         Type = "s3"

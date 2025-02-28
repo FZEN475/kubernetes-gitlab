@@ -1,5 +1,25 @@
 ---
 
+- name: pvc gitaly-backup-pvc
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: runner-cache-pvc
+        namespace: gitlab
+        annotations:
+          nfs.io/storage-path: runner-cache
+      spec:
+        storageClassName: nfs-client
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10G
+
 - name: Create ServiceAccount runner-kubernetes-sa
   kubernetes.core.k8s:
     state: present
