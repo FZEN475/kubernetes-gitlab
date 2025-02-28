@@ -1,6 +1,17 @@
 ---
 
-- name: DaemonSet ca registry
+- name: Remove DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+
+- name: Create DaemonSet ca registry
   kubernetes.core.k8s:
     state: present
     wait: true
@@ -38,8 +49,8 @@
                 hostPath:
                   path: /etc/docker/certs.d/registry.fzen.pro/
               - name: ca-cert
-                secret:
-                  secretName: cm-gitlab-tls
+                configMap:
+                  name: kube-root-ca.crt
                   items:
                     - key: ca.crt
                       path: ca.crt
