@@ -446,6 +446,9 @@ runners:
         image_pull_secrets = ["runner-gitlab-registry-secrets"]
         pull_policy = "if-not-present"
         dns_policy = "cluster-first"
+        [[runners.kubernetes.dns_config.options]]
+          name = "ndots"
+          value = "1"
         [[runners.kubernetes.volumes.secret]]
           name = "cm-gitlab-tls"
           mount_path = "/etc/ssl/certs/cluster.crt"
