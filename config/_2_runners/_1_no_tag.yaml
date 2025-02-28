@@ -442,7 +442,7 @@ runners:
       [runners.kubernetes]
         namespace = "{{.Release.Namespace}}"
         image = "ghcr.io/fzen475/backup-image:dev"
-        allowed_pull_policies = ["if-not-present", "always"]
+        allowed_pull_policies = ["", "if-not-present", "always"]
         [[runners.kubernetes.volumes.secret]]
           name = "cm-gitlab-tls"
           mount_path = "/etc/ssl/certs/cluster.crt"

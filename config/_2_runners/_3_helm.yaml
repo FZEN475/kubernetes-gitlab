@@ -482,7 +482,7 @@ runners:
         namespace = "{{.Release.Namespace}}"
         image = "alpine"
         service_account = "runner-kubernetes-sa"
-        allowed_pull_policies = ["if-not-present", "always"]
+        allowed_pull_policies = ["", "if-not-present", "always"]
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
