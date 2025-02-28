@@ -66,44 +66,37 @@
     - { src: "_2_docker_builder.yaml", dst: "_2_runner_docker_builder.yaml" }
     - { src: "_3_helm.yaml", dst: "_3_runner_helm.yaml" }
 
+- name: Runners list
+  ansible.builtin.set_fact:
+    runners:
+      - { name: "runner-no-tag", value: "/tmp/_1_values_runner_no_tags.yaml" }
+      - { name: "runner-docker-builder", value: "/tmp/_2_runner_docker_builder.yaml" }
+#      - { name: "runner-github" }
+#      - { name: "runner-helm" }
+
 - name: Remove gitlab-runner
   kubernetes.core.helm:
-    name: runner-no-tag
+    name: "{{ item.name }}"
     chart_ref: gitlab/gitlab-runner
     release_namespace: gitlab
     create_namespace: true
     state: absent
     wait: yes
+  with_items: "{{ runners }}"
 
-- name: Remove gitlab-runner
+- name: Установка gitlab-runner
   kubernetes.core.helm:
-    name: runner-docker-builder
+    name: "{{ item.name }}"
     chart_ref: gitlab/gitlab-runner
     release_namespace: gitlab
     create_namespace: true
-    state: absent
-    wait: yes
+    state: present
+    wait: no
+    values_files:
+      - "{{ item.value }}"
+  with_items: "{{ runners }}"
 
-- name: Remove gitlab-runner
-  kubernetes.core.helm:
-    name: runner-helm
-    chart_ref: gitlab/gitlab-runner
-    release_namespace: gitlab
-    create_namespace: true
-    state: absent
-    wait: yes
 
-#- name: Установка gitlab-runner
-#  kubernetes.core.helm:
-#    name: runner-no-tag
-#    chart_ref: gitlab/gitlab-runner
-#    release_namespace: gitlab
-#    create_namespace: true
-#    state: present
-#    wait: no
-#    values_files:
-#      - /tmp/_1_values_runner_no_tags.yaml
-#
 #- name: Установка gitlab-runner
 #  kubernetes.core.helm:
 #    name: runner-docker-builder
