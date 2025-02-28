@@ -455,10 +455,7 @@ runners:
         [[runners.kubernetes.volumes.secret]]
           name = "runner-github-secrets"
           mount_path = "/tmp/github/"
-
           read_only = true
-          [runners.kubernetes.volumes.secret.items]
-            "ca.crt" = "ca.crt"
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
