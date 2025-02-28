@@ -1,5 +1,49 @@
 ---
 
+- name: DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+        labels:
+          k8s-app: registry-ca
+      spec:
+        selector:
+          matchLabels:
+            name: registry-ca
+        template:
+          metadata:
+            labels:
+              name: registry-ca
+          spec:
+            containers:
+              - name: registry-ca
+                image: alpine
+                command: [ 'ash' ]
+                args: [ '-c', 'cp /tmp/ca.crt /etc/docker/certs.d/my-private-insecure-registry.com/ca.crt && exec tail -f /dev/null' ]
+                volumeMounts:
+                  - name: etc-docker
+                    mountPath: /etc/docker/certs.d/registry.fzen.pro/
+                  - name: ca-cert
+                    mountPath: /tmp/ca.crt
+                    subPath: ca.crt
+            terminationGracePeriodSeconds: 30
+            volumes:
+              - name: etc-docker
+                hostPath:
+                  path: /etc/docker/certs.d/registry.fzen.pro/
+              - name: ca-cert
+                secret:
+                  secretName: cm-gitlab-tls
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+
 - name: pvc gitaly-backup-pvc
   kubernetes.core.k8s:
     state: present
