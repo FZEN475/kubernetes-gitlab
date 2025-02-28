@@ -438,12 +438,12 @@ runners:
   # runner configuration: https://docs.gitlab.com/runner/configuration/advanced-configuration.html
   config: |
     [[runners]]
-      name = "docker_builder"
       executor = "kubernetes"
       [runners.kubernetes]
         namespace = "{{.Release.Namespace}}"
-        image = "gcr.io/kaniko-project/executor:debug"
+        image = "gitlab-registry.gitlab.svc:5000/github/multitool:latest"
         allowed_pull_policies = ["", "if-not-present", "always"]
+        image_pull_secrets = "runner-gitlab-registry-secrets"
         [[runners.kubernetes.volumes.secret]]
           name = "cm-gitlab-tls"
           mount_path = "/etc/ssl/certs/cluster.crt"
@@ -451,13 +451,13 @@ runners:
           read_only = true
           [runners.kubernetes.volumes.secret.items]
             "ca.crt" = "ca.crt"
-        [[runners.kubernetes.volumes.empty_dir]]
-          name = "docker-certs"
-          mount_path = "/empty_dir"
-          medium = "Memory"
-        [[runners.kubernetes.volumes.pvc]]
-          name = "runner-cache-pvc"
-          mount_path = "/pvc"
+        [[runners.kubernetes.volumes.secret]]
+          name = "runner-github-secrets"
+          mount_path = "/tmp/github/"
+
+          read_only = true
+          [runners.kubernetes.volumes.secret.items]
+            "ca.crt" = "ca.crt"
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
@@ -469,15 +469,6 @@ runners:
           BucketName = "gitlab-cache"
           BucketLocation = "us-east-1"
           Insecure = false
-  #      [runners.cache]
-  #        Type = "s3"
-  #        Shared = true
-  #        [runners.cache.s3]
-  #          ServerAddress = "s3.amazonaws.com"
-  #          BucketName = "gitlab-cash"
-  #          BucketLocation = "us-east-1"
-  #          Insecure = false
-
   #      url = "https://gitlab-webservice-default.gitlab.svc:8181/"
   ## Absolute path for an existing runner configuration file
   ## Can be used alongside "volumes" and "volumeMounts" to use an external config file
@@ -523,7 +514,7 @@ runners:
   # protected: true
 
   ## The name of the secret containing runner-token and runner-registration-token
-  secret: runner-docker-builder-secrets
+  secret: runner-git-secrets
 
   ## Distributed runners caching
   ## ref: https://docs.gitlab.com/runner/configuration/autoscale.html#distributed-runners-caching
@@ -662,7 +653,7 @@ runtimeClassName: ""
 ##
 nodeSelector:
   kubernetes.io/hostname: "dev01"
-# Example: The gitlab runner manager should not run on spot instances so you can assign
+  # Example: The gitlab runner manager should not run on spot instances so you can assign
 # them to the regular worker nodes only.
 # node-role.kubernetes.io/worker: "true"
 
@@ -823,7 +814,7 @@ volumeMounts:
 volumes:
   - name: gitlab-ca
     secret:
-      secretName:  cm-gitlab-tls
+      secretName: cm-gitlab-tls
       items:
         - key: ca.crt
           path: ca.crt
