@@ -36,7 +36,7 @@
               - name: registry-ca
                 image: alpine
                 command: [ 'ash' ]
-                args: [ '-c', 'cp /tmp/ca.crt /etc/docker/certs.d/registry.fzen.pro/ca-registry.crt && exec tail -f /dev/null' ]
+                args: [ '-c', 'cp /tmp/ca.crt /etc/ssl/certs/ca-registry.crt && exec tail -f /dev/null' ]
 
                 volumeMounts:
                   - name: etc-docker
@@ -54,7 +54,8 @@
             volumes:
               - name: etc-docker
                 hostPath:
-                  path: /etc/docker/certs.d/registry.fzen.pro/
+                  path: /etc/ssl/certs/
+#                  path: /etc/docker/certs.d/registry.fzen.pro/
               - name: ca-cert
                 configMap:
                   name: kube-root-ca.crt
