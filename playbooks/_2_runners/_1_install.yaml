@@ -36,11 +36,11 @@
               - name: registry-ca
                 image: alpine
                 command: [ 'ash' ]
-                args: [ '-c', 'cp /tmp/ca.crt /etc/docker/certs.d/registry.fzen.pro/ca.crt && exec tail -f /dev/null' ]
+                args: [ '-c', 'cp /tmp/ca.crt /etc/docker/certs.d/registry.fzen.pro/ca-registry.crt && exec tail -f /dev/null' ]
 
                 volumeMounts:
                   - name: etc-docker
-                    mountPath: /etc/docker/certs.d/registry.fzen.pro/
+                    mountPath: /etc/ssl/certs/
                   - name: ca-cert
                     mountPath: /tmp/ca.crt
                     subPath: ca.crt
