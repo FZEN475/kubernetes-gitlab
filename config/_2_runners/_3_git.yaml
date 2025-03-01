@@ -807,6 +807,10 @@ volumeMounts:
     mountPath: "/etc/ssl/certs/gitlab-ca.crt"
     subPath: ca.crt
     readOnly: true
+  - name: gitlab-ca
+    mountPath: "/etc/docker/certs.d/registry.fzen.pro/ca.crt"
+    subPath: ca.crt
+    readOnly: true
   # Example:
   # - name: my-volume
 #   mountPath: /mount/path

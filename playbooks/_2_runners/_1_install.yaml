@@ -62,6 +62,17 @@
                     - key: ca.crt
                       path: ca.crt
 
+- name: Remove DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+
 - name: pvc gitaly-backup-pvc
   kubernetes.core.k8s:
     state: present
