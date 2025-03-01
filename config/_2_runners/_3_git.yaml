@@ -655,7 +655,7 @@ runtimeClassName: ""
 ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 ##
 nodeSelector:
-  kubernetes.io/hostname: "dev01"
+  kubernetes.io/hostname: "control01"
   # Example: The gitlab runner manager should not run on spot instances so you can assign
 # them to the regular worker nodes only.
 # node-role.kubernetes.io/worker: "true"
