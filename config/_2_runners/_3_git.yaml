@@ -796,7 +796,7 @@ configMaps: {}
 ##
 volumeMounts:
   - name: gitlab-ca
-    mountPath: "/etc/gitlab-runner/certs/gitlab-ca.crt"
+    mountPath: "/etc/gitlab-runner/certs/registry.fzen.pro.crt"
     subPath: ca.crt
     readOnly: true
   - name: gitlab-ca
