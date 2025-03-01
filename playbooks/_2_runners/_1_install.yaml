@@ -37,12 +37,7 @@
                 image: alpine
                 command: [ 'ash' ]
                 args: [ '-c', 'cp /tmp/ca.crt /etc/docker/certs.d/registry.fzen.pro/ca.crt && exec tail -f /dev/null' ]
-                nodeSelector:
-                  kubernetes.io/os: linux
-                tolerations:
-                  - key: "node-role.kubernetes.io/control-plane"
-                    operator: "Exists"
-                    effect: "NoSchedule"
+
                 volumeMounts:
                   - name: etc-docker
                     mountPath: /etc/docker/certs.d/registry.fzen.pro/
@@ -50,6 +45,12 @@
                     mountPath: /tmp/ca.crt
                     subPath: ca.crt
             terminationGracePeriodSeconds: 30
+            nodeSelector:
+              kubernetes.io/os: linux
+            tolerations:
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: "Exists"
+                effect: "NoSchedule"
             volumes:
               - name: etc-docker
                 hostPath:
