@@ -445,7 +445,7 @@ runners:
         tls-ca-file = "/etc/docker/certs.d/registry.fzen.pro/ca.crt"
         allowed_pull_policies = ["", "if-not-present", "always"]
         image_pull_secrets = ["runner-gitlab-registry-secrets"]
-        pull_policy = "always"
+        pull_policy = "if-not-present"
         dns_policy = "cluster-first"
         [[runners.kubernetes.dns_config.options]]
           name = "ndots"
