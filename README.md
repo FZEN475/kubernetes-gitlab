@@ -1,93 +1,132 @@
 # kubernetes-gitlab
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.fzen.pro/github/kubernetes-gitlab.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab.fzen.pro/github/kubernetes-gitlab/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+* Установка через helm чарт.
+* Для удобства [values.yaml](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_1_global.yaml) разделён по сервисам.
+### Используемые [компоненты gitlab](https://docs.gitlab.com/development/architecture/)
+* [migration](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_2_migration.yaml) - инициализация и обновление баз данных.
+* [webservice](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_3_webservice.yaml) - сервер приложений Puma, запускающий Rails. Web интерфейс и обработка API запросов. 
+* [workhorse](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_3_webservice.yaml) - обработка длительных запросов к web-сервису.
+* [sidekiq](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_4_sidekiq.yaml) - обработка заданий gitlab в фоновом режиме. (Например раннеры).
+* [gitaly](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_5_gitaly.yaml) - Обработка вызовов git. Хранение файлов проекта.
+  * Файлы проектов хранятся прямо в контейнере. (Медленный NAS).
+  * Для резервного копирования используется дополнительный контейнер с cron.
+  * Для восстановления используется init контейнер.
+* [shell](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_6_shell.yaml) - управление доступом к git по ssh.
+* [registry](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_7_registry.yaml) - хранение изображений docker.
+* [kas](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_8_kas.yaml) - интеграция с kubernetes. Агент мониторинга кластера kubernetes поддерживает актуальное состояние объектов в соответствии с проектом git.
+* [exporter](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_9_exporter.yaml) - предоставление метрик gitlab.
+* [pages](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_1_gitlab/_10_pages.yaml) - публикация статический web-сайтов из репозитория.
+* runners - выполнение заданий CI/CD.
+  * Токены регистрации создаются в gitlab и обновляются в Vault.
+  * <details><summary> Runners list. </summary>
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+    | Name                                                                                                              | Default image                                         | Comment                   |
+    |:------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------|:--------------------------|
+    | [no_tag](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_2_runners/_1_no_tag.yaml)                 | [multitool](https://github.com/FZEN475/multitool.git) | Выполнение общих заданий. |
+    | [docker_builder](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_2_runners/_2_docker_builder.yaml) | [kaniko](gcr.io/kaniko-project/executor:debug)        | Сборка образов.           |
+    | [helm](https://github.com/FZEN475/kubernetes-gitlab/blob/main/config/_2_runners/_4_helm.yaml)     | [alpine/helm](https://hub.docker.com/r/alpine/helm)           | Доступ к kubernetes       |
+  
+  </details>
+* agents - доступ к kubernetes.
+  * Токены регистрации создаются в gitlab и обновляются в Vault.
+  * Агенты используют сервисные аккаунты без доступа ко всему кластеру.
+  * Список агентов и их настройки в [репозитории](https://github.com/FZEN475/kubernetes-agent-config.git).
+  * <details><summary> Agents list. </summary>
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+    | Name                  | Namespace | Comment                                 |
+    |:----------------------|:----------|:----------------------------------------|
+    | kubernetes-agent-dev  | dev       | Имеет полные права в пространстве имён. |
+    | kubernetes-agent-prod | prod       | Имеет полные права в пространстве имён. |
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+  </details>
+  
+## Dependency
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+* [Образ](https://github.com/FZEN475/ansible-image)
+* [Library](https://github.com/FZEN475/ansible-library)
+* <details><summary> .env </summary>
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+  ```properties
+  TERRAFORM_REPO="https://github.com/FZEN475/kubernetes-gitlab.git"
+  #GIT_EXTRA_PARAM="-btemp_branch"
+  SECURE_SERVER=""
+  SECURE_PATH=""
+  LIBRARY="https://github.com/FZEN475/ansible-library.git"
+  ``` 
+  </details>
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+* <details><summary> secrets </summary>
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+  ```yaml
+  secrets:
+    - id_ed25519
+  ```
+</details>
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Stages
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### [init](https://github.com/FZEN475/kubernetes-gitlab/blob/main/playbooks/_0_init/_1_install.yaml)
+* Создание PVC для резервных копий.
+* Создание ConfigMap со скриптами резервного копирования и восстановления. Используются в дополнительных контейнерах gitaly.
+### [gitlab](https://github.com/FZEN475/kubernetes-gitlab/blob/main/playbooks/_1_gitlab/_1_install.yaml)
+* Создание общего ServiceAccount для gitlab и доступа к секретам gitlab в vault.
+* Установка gitlab.
+* [Fix: gitlab-registry, gitlab-sidekiq-all-in-1-v2, gitlab-toolbox, gitlab-webservice-default](https://github.com/FZEN475/kubernetes-gitlab?tab=readme-ov-file#Troubleshoots)
+### [runners](https://github.com/FZEN475/kubernetes-gitlab/blob/main/playbooks/_2_runners/_1_install.yaml)
+* Создание и последующее удаление DaemonSet для копирования актуальных ca.crt registry на каждую NODE.
+* Создание PVC для кеширования на NFS.
+* Установка runners.
+### [agents](https://github.com/FZEN475/kubernetes-gitlab/blob/main/playbooks/_3_agents/_1_install.yaml)
+* Создание ServiceAccount с необходимыми правами для агентов.
+* Установка агентов.
 
-## License
-For open source projects, say how it is licensed.
+## Troubleshoots
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+<!DOCTYPE html>
+<table>
+  <thead>
+    <tr>
+      <th>Источник</th>
+      <th>Проблема</th>
+      <th>Решение</th>
+    </tr>
+  </thead>
+  <tr>
+      <td>gitlab</td>
+      <td>В чарте gitlab название сертификата registry-auth.crt жестко прописано и не редактируется через values.yaml<br/>Это не позволяет управлять сертификатами cert-manager.</td>
+      <td>
+
+Необходимо ручное редактирование конфигурации gitlab.
+</td>
+  </tr>
+  <tr>
+      <td>migrations</td>
+      <td>При восстановлении базы с новыми секретами:<br/>OpenSSL::Cipher::CipherError<br/><br/><br/>Но в моём случае восстановить базу без секретов не удалось.</td>
+      <td>
+
+Старые зашифрованные секреты невозможно прочитать. Нужно очистить нечитаемые секреты.<br/>
+```shell
+kubectl exec -it -n gitlab             pod/gitlab-toolbox-xxxxxxxxx-xxxxx -- bash
+gitlab-rails console
+settings = ApplicationSetting.last
+settings.update_column(:runners_registration_token_encrypted, nil)
+exit
+# Если не помогло.
+# Список нечитаемых секретов
+gitlab-rake gitlab:doctor:secrets VERBOSE=1
+# Некоторые токены не очистятся без изменения базы данных. (OpenSSL::Cipher::CipherError:)
+# ApplicationSetting: ci_jwt_signing_key, runners_registration_token, error_tracking_access_token...
+# Очистить нужно сразу все.
+# [Ссылка](https://forum.gitlab.com/t/web-ide-500/117193/22)
+kubectl exec -it -n storage            pod/postgresql-primary-0 -- bash
+psql -U postgres
+use gitlabhq_production;
+SELECT error_tracking_access_token_encrypted from application_settings;
+UPDATE application_settings SET error_tracking_access_token_encrypted = null;
+# Очистка секретов value в разделе Ci::PipelineVariable (DRY_RUN=false - применяет изменения)
+gitlab-rake gitlab:doctor:reset_encrypted_tokens MODEL_NAMES=Ci::PipelineVariable TOKEN_NAMES=value VERBOSE=true DRY_RUN=false
+```
+</td>
+  </tr>
+</table>

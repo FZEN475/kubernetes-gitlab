@@ -1,0 +1,51 @@
+
+global:
+  ## GitLab Runner
+  ## Secret created according to https://docs.gitlab.com/charts/installation/secrets#gitlab-runner-secret
+  ## If allowing shared-secrets generation, this is OPTIONAL.
+  runner:
+    registrationToken:
+      secret: "runner-secrets"
+
+
+
+## Installation & configuration of gitlab/gitlab-runner
+## See requirements.yaml for current version
+gitlab-runner:
+  install: false
+  rbac:
+    create: true
+  runners:
+    locked: false
+    # Set secret to an arbitrary value because the runner chart renders the gitlab-runner.secret template only if it is not empty.
+    # The parent/GitLab chart overrides the template to render the actual secret name.
+    secret: "runner-secrets"
+    config: |
+      concurrent = 100 # A global setting for job concurrency that applies to all runner sections defined in this `config.toml` file
+      log_level = "warning"
+      log_format = "info"
+      check_interval = 3 # Value in seconds
+      [session_server]
+        listen_address = "0.0.0.0:8093" # Listen on all available interfaces on port `8093`
+        advertise_address = "gitlab-runner.gitlab.svc:8093"
+        session_timeout = 1800
+#      [[runners]]
+#        [runners.kubernetes]
+#        image = "ubuntu:22.04"
+#        {{- if .Values.global.minio.enabled }}
+#        [runners.cache]
+#          Type = "s3"
+#          Path = "gitlab-runner"
+#          Shared = true
+#          [runners.cache.s3]
+#            ServerAddress = {{ include "gitlab-runner.cache-tpl.s3ServerAddress" . }}
+#            BucketName = "runner-cache"
+#            BucketLocation = "us-east-1"
+#            Insecure = false
+#        {{ end }}
+  podAnnotations:
+    gitlab.com/prometheus_scrape: "true"
+    gitlab.com/prometheus_port: 9252
+  podSecurityContext:
+    seccompProfile:
+      type: "RuntimeDefault"

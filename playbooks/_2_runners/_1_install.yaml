@@ -1,0 +1,143 @@
+---
+
+- name: Remove DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+
+- name: Create DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+        labels:
+          k8s-app: registry-ca
+      spec:
+        selector:
+          matchLabels:
+            name: registry-ca
+        template:
+          metadata:
+            labels:
+              name: registry-ca
+          spec:
+            containers:
+              - name: registry-ca
+                image: alpine
+                command: [ 'ash' ]
+                args: [ '-c', 'cp /tmp/ca.crt /etc/ssl/certs/ca-registry.crt && exec tail -f /dev/null' ]
+
+                volumeMounts:
+                  - name: etc-docker
+                    mountPath: /etc/ssl/certs/
+                  - name: ca-cert
+                    mountPath: /tmp/ca.crt
+                    subPath: ca.crt
+            terminationGracePeriodSeconds: 30
+            nodeSelector:
+              kubernetes.io/os: linux
+            tolerations:
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: "Exists"
+                effect: "NoSchedule"
+            volumes:
+              - name: etc-docker
+                hostPath:
+                  path: /etc/ssl/certs/
+#                  path: /etc/docker/certs.d/registry.fzen.pro/
+              - name: ca-cert
+                configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+
+- name: Remove DaemonSet ca registry
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: registry-ca
+        namespace: kube-system
+
+- name: pvc runner-cache-pvc
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: runner-cache-pvc
+        namespace: gitlab
+        annotations:
+          nfs.io/storage-path: runner-cache
+      spec:
+        storageClassName: nfs-client
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10G
+
+- name: Add stable chart repo gitlab
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    repo_state: "present"
+    force_update: true
+  with_items:
+    - {name: "gitlab", url: "https://charts.gitlab.io/"}
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_2_runners/{{ item.src }}'
+    dest: '/tmp/{{ item.dst }}'
+    mode: "0640"
+  with_items:
+    - { src: "_1_no_tag.yaml", dst: "_1_values_runner_no_tags.yaml" }
+    - { src: "_2_docker_builder.yaml", dst: "_2_runner_docker_builder.yaml" }
+    - { src: "_3_helm.yaml", dst: "_3_runner_helm.yaml" }
+
+- name: Runners list
+  ansible.builtin.set_fact:
+    runners:
+      - { name: "runner-no-tag", value: "/tmp/_1_values_runner_no_tags.yaml" }
+      - { name: "runner-docker-builder", value: "/tmp/_2_runner_docker_builder.yaml" }
+      - { name: "runner-helm", value: "/tmp/_3_runner_helm.yaml" }
+
+- name: Remove gitlab-runner
+  kubernetes.core.helm:
+    name: "{{ item.name }}"
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: yes
+  with_items: "{{ runners }}"
+
+- name: Установка gitlab-runner
+  kubernetes.core.helm:
+    name: "{{ item.name }}"
+    chart_ref: gitlab/gitlab-runner
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - "{{ item.value }}"
+  with_items: "{{ runners }}"
