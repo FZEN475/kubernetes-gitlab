@@ -1,0 +1,199 @@
+---
+
+- name: Create controllers namespace
+  kubernetes.core.k8s:
+    name: dev
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create controllers namespace
+  kubernetes.core.k8s:
+    name: prod
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create ServiceAccount gitlab-agent-sa dev
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: gitlab-agent-sa
+        namespace: dev
+
+- name: Create ServiceAccount gitlab-agent-sa prod
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: gitlab-agent-sa
+        namespace: prod
+
+- name: Access facts
+  ansible.builtin.set_fact:
+    access:
+      - { name: "agent-apiextensions-access", sa: "gitlab-agent-sa", sa_ns: "dev", ns: "dev", kind: "ClusterRole",
+          rules: [ { apiGroups: [ "apiextensions.k8s.io" ],
+                     resources: [ "customresourcedefinitions" ],
+                     verbs: [ "get", "list", "watch" ] } ]
+        }
+      - { name: "ingress-tcp-port-access", sa: "gitlab-agent-sa", sa_ns: "dev", ns: "provisioners", kind: "Role",
+          rules: [{ apiGroups: [""],
+                    resources: ["configmaps"],
+                    resourceNames: ["internal-nginx-ingress-nginx-tcp",
+                                    "internal-nginx-ingress-nginx-udp",
+                                    "external-nginx-ingress-nginx-tcp",
+                                    "external-nginx-ingress-nginx-udp"],
+                    verbs: ["get", "list","update"]}]
+        }
+      - { name: "agent-dev-access", sa: "gitlab-agent-sa", sa_ns: "dev", ns: "dev", kind: "Role",
+          rules: [{ apiGroups: ["*"],
+                    resources: ["*"],
+                    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]}]
+        }
+      - { name: "agent-apiextensions-access", sa: "gitlab-agent-sa", sa_ns: "prod", ns: "prod", kind: "ClusterRole",
+          rules: [ { apiGroups: [ "apiextensions.k8s.io" ],
+                     resources: [ "customresourcedefinitions" ],
+                     verbs: [ "get", "list", "watch" ] } ]
+      }
+      - { name: "ingress-tcp-port-access", sa: "gitlab-agent-sa", sa_ns: "prod", ns: "provisioners", kind: "Role",
+          rules: [{ apiGroups: [""],
+                    resources: ["configmaps"],
+                    resourceNames: ["internal-nginx-ingress-nginx-tcp",
+                                    "internal-nginx-ingress-nginx-udp",
+                                    "external-nginx-ingress-nginx-tcp",
+                                    "external-nginx-ingress-nginx-udp"],
+                    verbs: ["get", "list","update"]}]
+      }
+      - { name: "agent-prod-access", sa: "gitlab-agent-sa", sa_ns: "prod", ns: "prod", kind: "Role",
+          rules: [{ apiGroups: ["*"],
+                    resources: ["*"],
+                    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]}]
+      }
+
+- name: Remove Roles
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: "{{ item.kind }}"
+      metadata:
+        name: "{{ item.name }}-role"
+        namespace: "{{ item.ns }}"
+  with_items: "{{ access }}"
+
+- name: Remove RoleBindings
+  kubernetes.core.k8s:
+    state: absent
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: "{{ item.kind }}Binding"
+      metadata:
+        name: "{{ item.name }}-rb"
+        namespace: "{{ item.ns }}"
+  with_items: "{{ access }}"
+
+- name: Create Roles
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: "{{ item.kind }}"
+      metadata:
+        name: "{{ item.name }}-role"
+        namespace: "{{ item.ns }}"
+      rules: "{{ item.rules }}"
+  with_items: "{{ access }}"
+
+- name: Create RoleBindings
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: "{{ item.kind }}Binding"
+      metadata:
+        name: "{{ item.name }}-rb"
+        namespace: "{{ item.ns }}"
+      subjects:
+        - kind: ServiceAccount
+          name: "{{ item.sa }}"
+          namespace: "{{ item.sa_ns }}"
+          apiGroup: ""
+      roleRef:
+        kind: "{{ item.kind }}"
+        name: "{{ item.name }}-role"
+        namespace: "{{ item.ns }}"
+        apiGroup: rbac.authorization.k8s.io
+  with_items: "{{ access }}"
+
+- name: Add stable chart repo gitlab
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    repo_state: "present"
+    force_update: true
+  with_items:
+    - {name: "gitlab", url: "https://charts.gitlab.io/"}
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_3_agent/_1_values_kubernetes_agent_dev.yaml'
+    dest: '/tmp/values_kubernetes_agent_dev.yaml'
+    mode: "0640"
+
+- name: Remove kubernetes-agent-dev
+  kubernetes.core.helm:
+    name: "kubernetes-agent-dev"
+    chart_ref: gitlab/gitlab-agent
+    release_namespace: dev
+    create_namespace: true
+    state: absent
+    wait: yes
+
+- name: Установка kubernetes-agent-dev
+  kubernetes.core.helm:
+    name: "kubernetes-agent-dev"
+    chart_ref: gitlab/gitlab-agent
+    release_namespace: dev
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - "/tmp/values_kubernetes_agent_dev.yaml"
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_3_agent/_2_values_kubernetes_agent_prod.yaml'
+    dest: '/tmp/values_kubernetes_agent_prod.yaml'
+    mode: "0640"
+
+- name: Remove kubernetes-agent-prod
+  kubernetes.core.helm:
+    name: "kubernetes-agent-prod"
+    chart_ref: gitlab/gitlab-agent
+    release_namespace: prod
+    create_namespace: true
+    state: absent
+    wait: yes
+
+- name: Установка kubernetes-agent-prod
+  kubernetes.core.helm:
+    name: "kubernetes-agent-prod"
+    chart_ref: gitlab/gitlab-agent
+    release_namespace: prod
+    create_namespace: true
+    state: present
+    wait: no
+    values_files:
+      - "/tmp/values_kubernetes_agent_prod.yaml"

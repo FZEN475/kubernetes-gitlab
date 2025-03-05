@@ -1,0 +1,155 @@
+---
+
+- name: Create ServiceAccount gitlab-sa
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "gitlab-sa"
+        namespace: "gitlab"
+
+- name: Add stable chart repo gitlab
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    repo_state: "present"
+    force_update: true
+  with_items:
+    - {name: "gitlab", url: "https://charts.gitlab.io/"}
+
+- name: Copy values
+  ansible.builtin.copy:
+    src: '/source/config/_1_gitlab/{{ item.src }}'
+    dest: '/tmp/{{ item.dst }}'
+    mode: "0640"
+  with_items:
+    - { src: "_1_global.yaml", dst: "_1_values_global.yaml" }
+    - { src: "_2_migration.yaml", dst: "_2_values_migration.yaml" }
+    - { src: "_3_webservice.yaml", dst: "_3_values_webservice.yaml" }
+    - { src: "_4_shell.yaml", dst: "_4_values_shell.yaml" }
+    - { src: "_5_exporter.yaml", dst: "_5_values_exporter.yaml" }
+    - { src: "_6_kas.yaml", dst: "_6_values_kas.yaml" }
+    - { src: "_7_gitaly.yaml", dst: "_7_values_gitaly.yaml" }
+    - { src: "_8_sidekiq.yaml", dst: "_8_values_sidekiq.yaml" }
+    - { src: "_9_registry.yaml", dst: "_9_values_registry.yaml" }
+    - { src: "_10_pages.yaml", dst: "_10_values_pages.yaml" }
+
+- name: Remove gitlab
+  kubernetes.core.helm:
+    name: gitlab
+    chart_ref: gitlab/gitlab
+    release_namespace: gitlab
+    create_namespace: true
+    state: absent
+    wait: true
+
+- name: Install gitlab
+  kubernetes.core.helm:
+    name: gitlab
+    chart_ref: gitlab/gitlab
+    release_namespace: gitlab
+    create_namespace: true
+    state: present
+    wait: false
+    values_files:
+      - /tmp/_1_values_global.yaml
+      - /tmp/_2_values_migration.yaml
+      - /tmp/_3_values_webservice.yaml
+      - /tmp/_4_values_sidekiq.yaml
+      - /tmp/_5_values_gitaly.yaml
+      - /tmp/_6_values_shell.yaml
+      - /tmp/_7_values_registry.yaml
+      - /tmp/_8_values_kas.yaml
+      - /tmp/_9_values_exporter.yaml
+      - /tmp/_10_values_pages.yaml
+
+- name: Rename registry-auth.crt to tls.crt in gitlab-registry
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-registry
+    namespace: gitlab
+  register: gitlab_registry
+
+- name: Fix gitlab-registry
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-registry
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: registry-secrets
+                projected:
+                  "{{ gitlab_registry.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='registry-secrets'].projected\") | replace('registry-auth.crt','tls.crt') | from_yaml | first }}"
+
+- name: Rename registry-auth.crt to tls.crt in gitlab-sidekiq-all-in-1-v2
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-sidekiq-all-in-1-v2
+    namespace: gitlab
+  register: gitlab_sidekiq
+
+- name: Fix gitlab-sidekiq-all-in-1-v2
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-sidekiq-all-in-1-v2
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-sidekiq-secrets
+                projected:
+                  "{{ gitlab_sidekiq.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-sidekiq-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
+
+- name: Rename registry-auth.crt to tls.crt in gitlab-toolbox
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-toolbox
+    namespace: gitlab
+  register: gitlab_toolbox
+
+- name: Fix gitlab-toolbox
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-toolbox
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-toolbox-secrets
+                projected:
+                  "{{ gitlab_toolbox.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-toolbox-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
+
+- name: Rename registry-auth.crt to tls.crt in gitlab-webservice-default
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: gitlab-webservice-default
+    namespace: gitlab
+  register: gitlab_webservice_default
+
+- name: Fix gitlab-webservice-default
+  kubernetes.core.k8s:
+    state: patched
+    kind: Deployment
+    name: gitlab-webservice-default
+    namespace: gitlab
+    definition:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: init-webservice-secrets
+                projected:
+                  "{{ gitlab_webservice_default.resources[0].spec.template.spec.volumes | community.general.json_query(\"[?name=='init-webservice-secrets'].projected\") | replace('registry-auth.key','tls.key') | from_yaml | first }}"
