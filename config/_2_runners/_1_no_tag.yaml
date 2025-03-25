@@ -440,6 +440,7 @@ runners:
     [[runners]]
       executor = "kubernetes"
       pre_clone_script = '''
+    
         cp /var/run/secrets/kubernetes.io/serviceaccount/ca.crt /home/gitlab-runner/certs/
       '''
       [runners.kubernetes]
@@ -453,6 +454,10 @@ runners:
           read_only = true
           [runners.kubernetes.volumes.secret.items]
             "ca.crt" = "ca.crt"
+        [[runners.kubernetes.volumes.configmap]]
+          name = "kube-root-ca.crt"       # Имя ConfigMap
+          mount_path = "/home/gitlab-runner/certs/"  # Куда монтировать
+          read_only = true
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
