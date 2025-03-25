@@ -451,10 +451,14 @@ runners:
           name = "cm-gitlab-tls"
           mount_path = "/etc/ssl/certs/ca.crt"
           sub_path = "ca.crt"
+          [runners.kubernetes.volumes.configmap.items]
+            "ca.crt" = "ca.crt"
         [[runners.kubernetes.volumes.secret]]
-          name = "cm-gitlab-tls"
+          name = "vault-ca"
           mount_path = "/home/gitlab-runner/certs/ca.crt"
           sub_path = "ca.crt"
+          [runners.kubernetes.volumes.configmap.items]
+            "ca.crt" = "ca.crt"
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
