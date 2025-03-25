@@ -439,6 +439,9 @@ runners:
   config: |
     [[runners]]
       executor = "kubernetes"
+      pre_clone_script = '''
+        cp /var/run/secrets/kubernetes.io/serviceaccount/ca.crt /home/gitlab-runner/certs/
+      '''
       [runners.kubernetes]
         namespace = "{{.Release.Namespace}}"
         image = "ghcr.io/fzen475/multitool:latest"
