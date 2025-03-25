@@ -458,9 +458,8 @@ runners:
           name = "kube-root-ca.crt"       # Имя ConfigMap
           mount_path = "/home/gitlab-runner/certs/ca.crt"  # Куда монтировать
           read_only = true
-          items = {
+          [runners.kubernetes.volumes.configmap.items]
             "ca.crt" = "ca.crt"
-          }
       [runners.cache]
         Type = "s3"
         Path = "runner/cache"
